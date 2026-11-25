@@ -1,0 +1,17 @@
+{
+  "name": "oauth-pkce-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OAuth 2.0 Authorization Code Flow + PKCE demo: separate Identity Provider and Client backend (Node.js + TypeScript)",
+  "workspaces": ["idp", "client"],
+  "scripts": {
+    "dev": "concurrently -n idp,client -c magenta,cyan \"npm run dev -w idp\" \"npm run dev -w client\"",
+    "build": "npm run build -w idp && npm run build -w client",
+    "start": "concurrently -n idp,client -c magenta,cyan \"npm run start -w idp\" \"npm run start -w client\"",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": { "node": ">=18.17" }
+}

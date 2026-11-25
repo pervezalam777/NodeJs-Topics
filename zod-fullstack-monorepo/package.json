@@ -1,0 +1,21 @@
+{
+  "name": "zod-fullstack-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @demo/shared",
+    "build": "npm run build:shared && npm run build -w @demo/api && npm run build -w @demo/web",
+    "dev": "npm run build:shared && concurrently -k -n api,web -c cyan,magenta \"npm run dev -w @demo/api\" \"npm run dev -w @demo/web\"",
+    "dev:api": "npm run build:shared && npm run dev -w @demo/api",
+    "dev:web": "npm run build:shared && npm run dev -w @demo/web",
+    "typecheck": "npm run typecheck -w @demo/shared && npm run typecheck -w @demo/api && npm run typecheck -w @demo/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.3"
+  }
+}

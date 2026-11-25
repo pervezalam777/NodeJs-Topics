@@ -1,0 +1,54 @@
+# Full stack: PostgreSQL + Node API + React (nginx)
+#   cp .env.example .env   (then set the two secrets)
+#   docker compose up --build
+# App: http://localhost:8080
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app_password}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app_password}@db:5432/${POSTGRES_DB:-app}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:?Set ACCESS_TOKEN_SECRET in .env (>= 32 chars)}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:?Set REFRESH_TOKEN_SECRET in .env (>= 32 chars)}
+      ACCESS_TOKEN_TTL: 15m
+      REFRESH_TOKEN_TTL_DAYS: 7
+      # false because this compose setup serves plain http on localhost.
+      # Put it behind HTTPS (reverse proxy / load balancer) and set this to true in real deployments.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
